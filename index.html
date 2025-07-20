@@ -1,11 +1,24 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>自動跳轉中...</title>
-  <meta http-equiv="refresh" content="0; url=https://wsm.neocities.org/">
+  <title>語音歡迎頁</title>
 </head>
 <body>
-   Waiting ...
+  <h1>歡迎來到我的網站</h1>
+  <button onclick="speak()">點我聽語音</button>
+
+  <script>
+    function speak() {
+      const msg = new SpeechSynthesisUtterance("歡迎來到我們的網站！");
+      msg.lang = "zh-HK"; // 可改為 zh-TW、zh-CN、en-GB 等
+      window.speechSynthesis.speak(msg);
+    }
+
+    // 自動播放（需配合用戶互動或特定條件才能成功）
+    window.addEventListener('click', () => {
+      speak();
+    }, { once: true });
+  </script>
 </body>
 </html>
