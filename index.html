@@ -2,23 +2,25 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>語音歡迎頁</title>
+  <title>自動語音歡迎</title>
 </head>
 <body>
   <h1>歡迎來到我的網站</h1>
-  <button onclick="speak()">點我聽語音</button>
+  <p>請點擊任意位置以開始語音。</p>
 
   <script>
     function speak() {
-      const msg = new SpeechSynthesisUtterance("歡迎來到我們的網站！");
-      msg.lang = "zh-HK"; // 可改為 zh-TW、zh-CN、en-GB 等
-      window.speechSynthesis.speak(msg);
+      const msg = new SpeechSynthesisUtterance("Welcome to my garden！");
+      msg.lang = "zh-HK"; // 也可以用 zh-TW、zh-CN、en-GB 等
+      msg.pitch = 1;
+      msg.rate = 1;
+      msg.volume = 1;
+      speechSynthesis.speak(msg);
     }
 
-    // 自動播放（需配合用戶互動或特定條件才能成功）
+    // 只觸發一次
     window.addEventListener('click', () => {
       speak();
     }, { once: true });
   </script>
 </body>
-</html>
