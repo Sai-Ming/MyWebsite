@@ -1,0 +1,65 @@
+﻿<?php
+header('Content-Type: application/json; charset=utf-8');
+
+$station = isset($_GET['url']) ? $_GET['url'] : '';
+if (!$station) {
+    echo json_encode(["error" => "No station URL provided"]);
+    exit;
+}
+
+// 嘗試連接電台串流並讀取 ICY metadata
+$opts = [
+    "http" => [
+        "method" => "GET",
+        "header" => "Icy-MetaData: 1\r\nUser-Agent: Mozilla/5.0\r\n"
+    ]
+];
+$context = stream_context_create($opts);
+$fp = @fopen($station, 'r', false, $context);
+
+if (!$fp) {
+    echo json_encode(["error" => "Unable to connect"]);
+    exit;
+}
+
+// 從 HTTP 標頭找 metaint
+$metaInt = 0;
+foreach ($http_response_header as $h) {
+    if (stripos($h, 'icy-metaint') === 0) {
+        $parts = explode(':', $h);
+        $metaInt = intval(trim($parts[1]));
+        break;
+    }
+}
+
+// 若無 metaint，直接返回
+if ($metaInt <= 0) {
+    echo json_encode(["title" => "未知歌曲"]);
+    fclose($fp);
+    exit;
+}
+
+// 跳過音訊資料到 metadata 區塊
+$buffer = '';
+$read = 0;
+while ($read < $metaInt) {
+    $chunk = fread($fp, $metaInt - $read);
+    if (!$chunk) break;
+    $read += strlen($chunk);
+}
+
+// 讀 metadata
+$metaLength = ord(fread($fp, 1)) * 16;
+$metaData = $metaLength > 0 ? fread($fp, $metaLength) : '';
+
+fclose($fp);
+
+// 解析歌曲名稱
+$title = "未知歌曲";
+if ($metaData) {
+    if (preg_match("/StreamTitle='([^']*)'/i", $metaData, $matches)) {
+        $title = $matches[1];
+    }
+}
+
+echo json_encode(["title" => $title]);
