@@ -2,109 +2,113 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>美國 + 英國 音樂電台播放器</title>
+<title>英美音樂電台播放器</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        color: white;
-        padding: 20px;
-    }
-    h1 {
-        margin-bottom: 20px;
-    }
-    select {
-        padding: 10px;
-        font-size: 16px;
-        border-radius: 5px;
-    }
-    audio {
-        margin-top: 15px;
-        width: 90%;
-        max-width: 500px;
-    }
-    img {
-        margin-top: 20px;
-        width: 150px;
-        height: auto;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    #nowPlaying {
-        margin-top: 10px;
-        font-size: 18px;
-        font-weight: bold;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    select { padding: 10px; font-size: 16px; border-radius: 5px; margin-top: 10px; }
+    audio { margin-top: 15px; width: 90%; max-width: 500px; }
+    img { margin-top: 20px; width: 150px; height: auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    #nowPlaying { margin-top: 10px; font-size: 18px; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<h1>🌎 美國 + 英國 音樂電台播放器</h1>
-
-<select id="stationSelect">
-    <optgroup label="🇬🇧 英國">       
-        <option value="http://media-ice.musicradio.com/CapitalUK" data-logo="https://upload.wikimedia.org/wikipedia/commons/f/f7/Capital_FM_logo_2011.svg">Capital FM UK</option>
-        <option value="http://media-ice.musicradio.com/HeartUKMP3" data-logo="https://upload.wikimedia.org/wikipedia/commons/3/31/Heart_FM_logo_2014.svg">Heart UK</option>
-        <option value="http://media-ice.musicradio.com/SmoothUKMP3" data-logo="https://upload.wikimedia.org/wikipedia/commons/1/19/Smooth_Radio_logo_2014.svg">Smooth Radio UK</option>
-    </optgroup>
-    <optgroup label="🇺🇸 美國">
-	<option value="https://kexp-mp3-128.streamguys1.com/kexp128.mp3" data-logo="https://upload.wikimedia.org/wikipedia/commons/7/70/KEXP_logo.svg">KEXP Seattle</option>       
-        <option value="http://listen.181fm.com/181-beat_128k.mp3" data-logo="https://181fm.com/images/181-fm-logo.png">181.FM The Beat</option>
-        <option value="https://stream.radioparadise.com/mp3-192" data-logo="https://radioparadise.com/img/rp_logo_square.jpg">Radio Paradise</option>       
-    </optgroup>
-</select>
-
+<h1>🌎 英美音樂電台播放器</h1>
+<select id="stationSelect"></select>
 <br>
-
 <img id="stationLogo" src="" alt="Station Logo">
-<div id="nowPlaying">🎵 Now Playing: 無法取得歌曲資訊</div>
-
+<div id="nowPlaying">🎵 Now Playing: 載入中...</div>
 <audio id="player" controls autoplay></audio>
 
 <script>
-    const stationSelect = document.getElementById("stationSelect");
-    const player = document.getElementById("player");
-    const logo = document.getElementById("stationLogo");
-    const nowPlaying = document.getElementById("nowPlaying");
+const stations = [
+    // 英國
+    { name: "BBC Radio 1", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one", logo: "https://upload.wikimedia.org/wikipedia/en/2/21/BBC_Radio_1.svg", api: "https://rms.api.bbc.co.uk/v2/experience/inline/bbc_radio_one" },
+    { name: "BBC Radio 2", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0a/BBC_Radio_2_2021.svg", api: "https://rms.api.bbc.co.uk/v2/experience/inline/bbc_radio_two" },
+    { name: "BBC Radio 6 Music", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_6music", logo: "https://upload.wikimedia.org/wikipedia/en/0/0c/BBC_6_Music_logo.svg", api: "https://rms.api.bbc.co.uk/v2/experience/inline/bbc_6music" },
+    { name: "Capital FM UK", url: "http://media-ice.musicradio.com/CapitalUK", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f7/Capital_FM_logo_2011.svg" },
+    { name: "Heart UK", url: "http://media-ice.musicradio.com/HeartUKMP3", logo: "https://upload.wikimedia.org/wikipedia/commons/3/31/Heart_FM_logo_2014.svg" },
+    { name: "Smooth Radio UK", url: "http://media-ice.musicradio.com/SmoothUKMP3", logo: "https://upload.wikimedia.org/wikipedia/commons/1/19/Smooth_Radio_logo_2014.svg" },
+    { name: "Classic FM UK", url: "http://media-ice.musicradio.com/ClassicFMMP3", logo: "https://upload.wikimedia.org/wikipedia/en/2/2d/Classic_FM_logo_2011.svg" },
+    { name: "Absolute Radio", url: "http://media-ice.musicradio.com/AbsoluteRadioMP3", logo: "https://upload.wikimedia.org/wikipedia/en/0/0b/Absolute_radio_logo.png" },
+    // 美國
+    { name: "KEXP Seattle", url: "https://kexp-mp3-128.streamguys1.com/kexp128.mp3", logo: "https://upload.wikimedia.org/wikipedia/commons/7/70/KEXP_logo.svg", api: "https://api.kexp.org/v2/plays/?limit=1" },
+    { name: "KCRW Santa Monica", url: "https://kcrw.streamguys1.com/kcrw_192k_mp3_on_air", logo: "https://upload.wikimedia.org/wikipedia/commons/3/33/KCRW_logo.svg" },
+    { name: "Hot 108 JAMZ", url: "http://108.61.30.179:5000/stream", logo: "https://i.imgur.com/DkXoEZC.png" },
+    { name: "181.FM The Beat", url: "http://listen.181fm.com/181-beat_128k.mp3", logo: "https://181fm.com/images/181-fm-logo.png" },
+    { name: "181.FM Lite 90s", url: "http://listen.181fm.com/181-lite90s_128k.mp3", logo: "https://181fm.com/images/181-fm-logo.png" },
+    { name: "181.FM Power 181", url: "http://listen.181fm.com/181-power181_128k.mp3", logo: "https://181fm.com/images/181-fm-logo.png" },
+    { name: "Radio Paradise", url: "https://stream.radioparadise.com/mp3-192", logo: "https://radioparadise.com/img/rp_logo_square.jpg", api: "https://api.radioparadise.com/api/nowplaying" },
+    { name: "Classic Rock Florida", url: "http://us2.internet-radio.com:8435/stream", logo: "https://cdn.webrad.io/images/logos/radio-18569.png" },
+    { name: "Smooth Jazz Florida", url: "http://us2.internet-radio.com:8443/stream", logo: "https://cdn.webrad.io/images/logos/radio-18580.png" },
+    { name: "Jazz24 Seattle", url: "https://live.wostreaming.net/direct/ppm-jazz24mp3-ibc1", logo: "https://www.jazz24.org/wp-content/uploads/2017/09/jazz24-logo.png" },
+    { name: "The Eagle 106.7 Atlanta", url: "http://192.240.102.3:8304/stream", logo: "https://i.imgur.com/8lpsV9h.png" }
+];
 
-    function playStation(url, logoUrl) {
-        player.src = url;
-        logo.src = logoUrl;
-        nowPlaying.textContent = "🎵 Now Playing: 載入中...";
-        player.play().catch(err => console.log("Autoplay blocked:", err));
-        
-        // 嘗試抓歌曲資訊（部分電台支持）
-        fetchMetadata(url);
-    }
+const stationSelect = document.getElementById("stationSelect");
+const player = document.getElementById("player");
+const logo = document.getElementById("stationLogo");
+const nowPlaying = document.getElementById("nowPlaying");
 
-    function fetchMetadata(streamUrl) {
-    // 呼叫後端 PHP 代理來抓歌名
-    fetch("getNowPlaying.php?url=" + encodeURIComponent(streamUrl))
-        .then(res => res.json())
-        .then(data => {
-            if (data.title) {
-                nowPlaying.textContent = "🎵 Now Playing: " + data.title;
-            } else {
-                nowPlaying.textContent = "🎵 Now Playing: 無法取得";
-            }
-        })
-        .catch(err => {
-            nowPlaying.textContent = "🎵 Now Playing: 錯誤";
-            console.error(err);
-        });
+// 初始化選單
+stations.forEach((station, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx;
+    opt.textContent = station.name;
+    stationSelect.appendChild(opt);
+});
+
+function playStation(index) {
+    const st = stations[index];
+    player.src = st.url;
+    logo.src = st.logo;
+    nowPlaying.textContent = "🎵 Now Playing: 載入中...";
+    player.play().catch(err => console.log("Autoplay blocked:", err));
+    fetchMetadata(st);
 }
 
+function fetchMetadata(st) {
+    if (st.api) {
+        // 有 API 的台
+        fetch(st.api)
+            .then(res => res.json())
+            .then(data => {
+                let title = "未知";
+                if (st.name.includes("BBC") && data?.data?.now?.playing_item?.titles?.primary) {
+                    title = data.data.now.playing_item.titles.primary;
+                } else if (st.name.includes("KEXP") && data.results?.length) {
+                    const song = data.results[0];
+                    title = `${song.artist} - ${song.song}`;
+                } else if (st.name.includes("Radio Paradise") && data.songtitle) {
+                    title = data.songtitle;
+                }
+                nowPlaying.textContent = "🎵 Now Playing: " + title;
+            })
+            .catch(() => {
+                nowPlaying.textContent = "🎵 Now Playing: 無法取得";
+            });
+    } else {
+        // 無 API 的台 → 用 PHP 後端抓
+        fetch("getNowPlaying.php?url=" + encodeURIComponent(st.url))
+            .then(res => res.json())
+            .then(data => {
+                nowPlaying.textContent = "🎵 Now Playing: " + (data.title || "未知");
+            })
+            .catch(() => {
+                nowPlaying.textContent = "🎵 Now Playing: 無法取得";
+            });
+    }
+}
 
-    // 預設播放第一台
-    const firstOption = stationSelect.options[0];
-    playStation(firstOption.value, firstOption.dataset.logo);
+stationSelect.addEventListener("change", e => {
+    playStation(e.target.value);
+});
 
-    // 切換電台
-    stationSelect.addEventListener("change", function() {
-        const selected = this.options[this.selectedIndex];
-        playStation(selected.value, selected.dataset.logo);
-    });
+playStation(0);
+setInterval(() => {
+    fetchMetadata(stations[stationSelect.value]);
+}, 30000);
 </script>
 
 </body>
