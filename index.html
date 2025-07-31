@@ -1,26 +1,111 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>自動語音歡迎</title>
+<meta charset="UTF-8">
+<title>美國 + 英國 音樂電台播放器</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        padding: 20px;
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    select {
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+    audio {
+        margin-top: 15px;
+        width: 90%;
+        max-width: 500px;
+    }
+    img {
+        margin-top: 20px;
+        width: 150px;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    #nowPlaying {
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
 </head>
 <body>
-  <h1>歡迎來到我的網站</h1>
-  <p>請點擊任意位置以開始語音。</p>
 
-  <script>
-    function speak() {
-      const msg = new SpeechSynthesisUtterance("Welcome to my garden！");
-      msg.lang = "zh-HK"; // 也可以用 zh-TW、zh-CN、en-GB 等
-      msg.pitch = 1;
-      msg.rate = 1;
-      msg.volume = 1;
-      speechSynthesis.speak(msg);
+<h1>🌎 美國 + 英國 音樂電台播放器</h1>
+
+<select id="stationSelect">
+    <optgroup label="🇬🇧 英國">       
+        <option value="http://media-ice.musicradio.com/CapitalUK" data-logo="https://upload.wikimedia.org/wikipedia/commons/f/f7/Capital_FM_logo_2011.svg">Capital FM UK</option>
+        <option value="http://media-ice.musicradio.com/HeartUKMP3" data-logo="https://upload.wikimedia.org/wikipedia/commons/3/31/Heart_FM_logo_2014.svg">Heart UK</option>
+        <option value="http://media-ice.musicradio.com/SmoothUKMP3" data-logo="https://upload.wikimedia.org/wikipedia/commons/1/19/Smooth_Radio_logo_2014.svg">Smooth Radio UK</option>
+    </optgroup>
+    <optgroup label="🇺🇸 美國">
+	<option value="https://kexp-mp3-128.streamguys1.com/kexp128.mp3" data-logo="https://upload.wikimedia.org/wikipedia/commons/7/70/KEXP_logo.svg">KEXP Seattle</option>       
+        <option value="http://listen.181fm.com/181-beat_128k.mp3" data-logo="https://181fm.com/images/181-fm-logo.png">181.FM The Beat</option>
+        <option value="https://stream.radioparadise.com/mp3-192" data-logo="https://radioparadise.com/img/rp_logo_square.jpg">Radio Paradise</option>       
+    </optgroup>
+</select>
+
+<br>
+
+<img id="stationLogo" src="" alt="Station Logo">
+<div id="nowPlaying">🎵 Now Playing: 無法取得歌曲資訊</div>
+
+<audio id="player" controls autoplay></audio>
+
+<script>
+    const stationSelect = document.getElementById("stationSelect");
+    const player = document.getElementById("player");
+    const logo = document.getElementById("stationLogo");
+    const nowPlaying = document.getElementById("nowPlaying");
+
+    function playStation(url, logoUrl) {
+        player.src = url;
+        logo.src = logoUrl;
+        nowPlaying.textContent = "🎵 Now Playing: 載入中...";
+        player.play().catch(err => console.log("Autoplay blocked:", err));
+        
+        // 嘗試抓歌曲資訊（部分電台支持）
+        fetchMetadata(url);
     }
 
-    // 只觸發一次
-    window.addEventListener('click', () => {
-      speak();
-    }, { once: true });
-  </script>
+    function fetchMetadata(streamUrl) {
+    // 呼叫後端 PHP 代理來抓歌名
+    fetch("getNowPlaying.php?url=" + encodeURIComponent(streamUrl))
+        .then(res => res.json())
+        .then(data => {
+            if (data.title) {
+                nowPlaying.textContent = "🎵 Now Playing: " + data.title;
+            } else {
+                nowPlaying.textContent = "🎵 Now Playing: 無法取得";
+            }
+        })
+        .catch(err => {
+            nowPlaying.textContent = "🎵 Now Playing: 錯誤";
+            console.error(err);
+        });
+}
+
+
+    // 預設播放第一台
+    const firstOption = stationSelect.options[0];
+    playStation(firstOption.value, firstOption.dataset.logo);
+
+    // 切換電台
+    stationSelect.addEventListener("change", function() {
+        const selected = this.options[this.selectedIndex];
+        playStation(selected.value, selected.dataset.logo);
+    });
+</script>
+
 </body>
+</html>
